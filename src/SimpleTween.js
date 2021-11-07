@@ -68,6 +68,11 @@ class SimpleTween {
    */
   delay = 0;
 
+  /**
+   * Number of times to repeat for each animation
+   */
+  repeat = 1;
+
   isPaused = false;
   pauseTime = 0;
   pauseStartTime = 0;
@@ -125,14 +130,18 @@ class SimpleTween {
 
   getValues(baseValues, defaultValues, previousValues) {
     const values = {};
-    const baseKeys = Object.keys(baseValues);
-    for (let index = 0; index < baseKeys.length; index++) {
-      values[baseKeys[index]] = baseValues[baseKeys[index]];
+    if (baseValues) {
+      const baseKeys = Object.keys(baseValues);
+      for (let index = 0; index < baseKeys.length; index++) {
+        values[baseKeys[index]] = baseValues[baseKeys[index]];
+      }
     }
-    const defaultKeys = Object.keys(defaultValues);
-    for (let index = 0; index < defaultKeys.length; index++) {
-      if (values[defaultKeys[index]] === undefined) {
-        values[defaultKeys[index]] = defaultValues[defaultKeys[index]];
+    if (defaultValues) {
+      const defaultKeys = Object.keys(defaultValues);
+      for (let index = 0; index < defaultKeys.length; index++) {
+        if (values[defaultKeys[index]] === undefined) {
+          values[defaultKeys[index]] = defaultValues[defaultKeys[index]];
+        }
       }
     }
     if (previousValues) {
@@ -195,6 +204,11 @@ class SimpleTween {
     return this;
   }
 
+  setRepeat(repeat) {
+    this.repeat = repeat;
+    return this;
+  }
+
   stopValue(name) {
     if (this.currentValues[name] !== undefined) {
       this.startValues[name] = this.currentValues[name];
@@ -231,9 +245,13 @@ class SimpleTween {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Control functions
   
-  start()
+  start(resetReapeat = true)
   {
     this.stop();
+
+    if (resetReapeat) {
+      this.repeatRest = this.repeat;
+    }
 
     this.startTime = Date.now() + this.delay;
     this.endTime = Date.now() + this.delay + this.duration;
@@ -333,8 +351,21 @@ class SimpleTween {
       this.stop();
       if (this.cycle)
       {
-          this.reverse();
-          this.start();
+        this.reverse();
+        if (this.direction == -1) {
+          this.start(false);
+        }
+      }
+    }
+
+    if (!this.isPlaying && this.repeatRest) {
+      if (this.repeatRest > 0) {
+        this.repeatRest--;
+      }
+      if (this.repeatRest !== 0) {
+        this.start(true);
+      } else {
+        this.stop();
       }
     }
   }
@@ -397,6 +428,7 @@ class SimpleTween {
     this.forward();
     this.endValues = values;
     this.setDuration(duration);
+    this.start();
     return this;
   }
 
