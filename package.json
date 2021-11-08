@@ -1,6 +1,6 @@
 {
   "name": "react-native-simple-tween",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Simple animation library based on setTimeout for React native",
   "main": "index.js",
   "scripts": {
@@ -10,10 +10,23 @@
     "type": "git",
     "url": "git+https://github.com/grabmy/react-native-simple-tween.git"
   },
-  "author": "",
+  "author": "CodeGrabber",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/grabmy/react-native-simple-tween/issues"
   },
-  "homepage": "https://github.com/grabmy/react-native-simple-tween#readme"
-}
+  "homepage": "https://github.com/grabmy/react-native-simple-tween#readme",
+  "keywords": [
+    "tween",
+    "animation",
+    "tween js",
+    "tweening",
+    "react",
+    "reanimated",
+    "reanimate",
+    "react native",
+    "react native animation",
+    "react native tween",
+    "tween react",
+    "tween react native"
+  ]}
