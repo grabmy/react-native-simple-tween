@@ -156,7 +156,7 @@ class SimpleTween {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setting variables
+  // Setting options
 
   setUpdateTime(updateTime) {
     this.updateTime = updateTime;
@@ -247,7 +247,9 @@ class SimpleTween {
   
   start(resetReapeat = true)
   {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
 
     if (resetReapeat) {
       this.repeatRest = this.repeat;
@@ -268,6 +270,7 @@ class SimpleTween {
     this.timeoutId = setTimeout(() => {
         this.process();
     }, this.updateTime);
+    return this;
   }
 
   process() {
@@ -376,6 +379,7 @@ class SimpleTween {
     {
         clearTimeout(this.timeoutId);
     }
+    return this;
   }
 
   pause() {
@@ -401,29 +405,34 @@ class SimpleTween {
     return this;
   }
 
-  reverse()
-  {
-    this.stop();
+  reverse() {
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = -this.direction;
     return this;
   }
 
-  forward()
-  {
-    this.stop();
+  forward() {
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = 1;
     return this;
   }
 
-  backward()
-  {
-    this.stop();
+  backward() {
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = -1;
     return this;
   }
 
   to(values, duration) {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.startValues = this.currentValues;
     this.forward();
     this.endValues = values;
