@@ -141,6 +141,33 @@ Start an animation from the current values to the provided values in a duration.
 tween.to({x: 100}, 1000);
 ```
 
+#### setValues (values)
+
+Stop the animation and set the current values
+
+```js
+// Set the values
+tween.setValues({x: 0});
+```
+
+#### stopValue (valueName)
+
+Stop one value in the animation. Animation will not stop and the value will be returned with the same current value.
+
+```js
+// Stop x value
+tween.stopValue('x');
+```
+
+#### removeValue (valueName)
+
+Remove a value from the animation. Animation will not stop and the value will no longer be returned.
+
+```js
+// Remove y value
+tween.removeValue('y');
+```
+
 ### Settings
 
 #### setUpdateTime (ms)
