@@ -199,8 +199,13 @@ class SimpleTween {
   }
 
   setValues(values) {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.currentValues = values;
+    if (this.updateFunction) {
+      this.updateFunction(this.currentValues);
+    }
     return this;
   }
 
@@ -247,7 +252,9 @@ class SimpleTween {
   
   start(resetReapeat = true)
   {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
 
     if (resetReapeat) {
       this.repeatRest = this.repeat;
@@ -403,27 +410,35 @@ class SimpleTween {
 
   reverse()
   {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = -this.direction;
     return this;
   }
 
   forward()
   {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = 1;
     return this;
   }
 
   backward()
   {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.direction = -1;
     return this;
   }
 
   to(values, duration) {
-    this.stop();
+    if (this.isPlaying) {
+      this.stop();
+    }
     this.startValues = this.currentValues;
     this.forward();
     this.endValues = values;
@@ -432,6 +447,12 @@ class SimpleTween {
     return this;
   }
 
+  reset() {
+    if (this.isPlaying) {
+      this.stop();
+    }
+    this.setValues(this.startValues);
+  }
 }
 
 SimpleTween.Easing = Easing;
