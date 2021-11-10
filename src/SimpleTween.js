@@ -156,7 +156,7 @@ class SimpleTween {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  // Setting variables
+  // Setting options
 
   setUpdateTime(updateTime) {
     this.updateTime = updateTime;
@@ -275,6 +275,7 @@ class SimpleTween {
     this.timeoutId = setTimeout(() => {
         this.process();
     }, this.updateTime);
+    return this;
   }
 
   process() {
@@ -383,6 +384,7 @@ class SimpleTween {
     {
         clearTimeout(this.timeoutId);
     }
+    return this;
   }
 
   pause() {
@@ -408,8 +410,7 @@ class SimpleTween {
     return this;
   }
 
-  reverse()
-  {
+  reverse() {
     if (this.isPlaying) {
       this.stop();
     }
@@ -417,8 +418,7 @@ class SimpleTween {
     return this;
   }
 
-  forward()
-  {
+  forward() {
     if (this.isPlaying) {
       this.stop();
     }
@@ -426,8 +426,7 @@ class SimpleTween {
     return this;
   }
 
-  backward()
-  {
+  backward() {
     if (this.isPlaying) {
       this.stop();
     }

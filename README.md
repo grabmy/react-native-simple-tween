@@ -37,15 +37,10 @@ tween.start();
 
 ### Chain the functions
 
-```
-tween.setDuration(500)
-    .setDelay(100)
-    .setCycle(true)
-    .start();
+```js
+tween.setDuration(500).setDelay(100).setCycle(true).start();
 
-tween.pause()
-    .removeValue({x: 0})
-    .resume();
+tween.pause().removeValue({ x: 0 }).resume();
 ```
 
 ## API
@@ -151,6 +146,34 @@ so the update event is triggered.
 tween.reset();
 ```
 
+#### setValues (values)
+
+Stop the animation, set the current values and call update
+
+```js
+// Set the values
+tween.setValues({ x: 0 });
+```
+
+#### stopValue (valueName)
+
+Stop one value in the animation. Animation will not stop and the value will be returned with the same current value.
+
+```js
+// Stop x value
+tween.stopValue("x");
+```
+
+#### removeValue (valueName)
+
+Remove a value from the animation. Animation will not stop and the value will no longer be returned.
+
+```js
+// Remove y value
+tween.removeValue('y');
+>>>>>>> 29e3a1b56c707263415083802baffd94eb693cd3
+```
+
 ### Settings
 
 #### setUpdateTime (ms)
@@ -210,6 +233,11 @@ tween.setDelay(500);
 #### setEasing (func)
 
 Set if the animation easing function. There is a list of usefull easing function in SimpleTween.Easing :
+<<<<<<< HEAD
+
+=======
+
+> > > > > > > 29e3a1b56c707263415083802baffd94eb693cd3
 
 - Linear (None)
 - Quadratic (In, Out, InOut)
@@ -238,4 +266,6 @@ tween.setEasing(SimpleTween.Easing.Sinusoidal.InOut);
 - Implement request animation frame
 - Add setInterval in backup
 - Test with continuous loop for several hours
-- Add a value independately
+  <<<<<<< HEAD
+- # Add a value independately
+  > > > > > > > 29e3a1b56c707263415083802baffd94eb693cd3
