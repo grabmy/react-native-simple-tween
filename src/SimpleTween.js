@@ -9,6 +9,16 @@ class SimpleTween {
   timeoutId = 0;
 
   /**
+   * The current interval id, set to 0 if not set
+   */
+  intervalId = 0;
+  
+  /**
+   * The current animation frame id, set to 0 if not set
+   */
+  animationFrameId = 0
+  
+  /**
    * Starting position for all the variables
    */
   startValues = {};
@@ -96,6 +106,10 @@ class SimpleTween {
       this.process = this.process.bind(this);
       
       this.timeoutId = 0;
+    
+      this.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame
+        || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+      this.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -272,24 +286,68 @@ class SimpleTween {
       this.startFunction(this.currentValues);
     }
 
-    this.timeoutId = setTimeout(() => {
-        this.process();
-    }, this.updateTime);
     return this;
   }
-
-  process() {
-    if (this.isPaused) {
-      this.timeoutId = setTimeout(() => {
-        this.process();
-      }, this.updateTime);
-      return;
-    }
-
-    if (Date.now() < this.startTime) {
+  
+  setProcessRequest() {
+    if (this.requestAnimationFrame) {
+      this.animationFrameId = this.requestAnimationFrame(Process);
+    } else {
       this.timeoutId = setTimeout(() => {
           this.process();
       }, this.updateTime);
+      this.intervalId = setInterval(() => {
+          this.process();
+      }, this.updateTime);
+    }
+  }
+
+    
+  setNextProcessRequest() {
+    if (!this.requestAnimationFrame) {
+      if (this.timeoutId) {
+        this.cancelTimeout(this.timeoutId);
+      }
+      if (this.intervalId) {
+        this.cancelInterval(this.intervalId);
+      }
+      this.timeoutId = setTimeout(() => {
+          this.process();
+      }, this.updateTime);
+      this.intervalId = setInterval(() => {
+          this.process();
+      }, this.updateTime);
+    }
+  }
+
+  cancelProcessRequest() {
+    if (this.cancelAnimationFrame && this.animationFrameId) {
+      this.cancelAnimationFrame(this.animationFrameId);
+    }
+    if (this.timeoutId) {
+      this.cancelTimeout(this.timeoutId);
+    }
+    if (this.intervalId) {
+      this.cancelInterval(this.intervalId);
+    }
+  }
+  
+  process() {
+    // On pause we do nothing and skip to next process
+    if (this.isPaused) {
+      this.setNextProcessRequest();
+      return;
+    }
+    
+    // If animation if not started, skip to next process
+    if (Date.now() < this.startTime) {
+      this.setNextProcessRequest();
+      return;
+    }
+    
+    // If process call too soon, skip to next process
+    if (Date.now() < this.processTime) {
+      this.setNextProcessRequest();
       return;
     }
 
