@@ -1,6 +1,6 @@
 # react-native-simple-tween
 
-Simple animation library based on setTimeout.
+Simple variables transition between 2 values based on setTimeout.
 
 This library will animate values (floats and hex colors) and call an update function to retrieve the modified values.
 
@@ -50,6 +50,8 @@ tween.pause().removeValue({ x: 0 }).resume();
 Instanciation takes 3 parameters: the start values, the end values and the duration of the animation.
 
 ```js
+const from = {a: 0, test: 1000};
+const to = {a: 1, test: 0};
 // Instanciate the tween object
 const tween = new SimpleTween(from, to, 1000);
 ```
@@ -261,11 +263,16 @@ tween.setEasing(SimpleTween.Easing.Quartic.In);
 tween.setEasing(SimpleTween.Easing.Sinusoidal.InOut);
 ```
 
+## Changelog
+
+### Version 0.2.0
+
+## DONE
+
 ## TODO
 
 - Implement request animation frame
 - Add setInterval in backup
+- Add chaining animation
 - Test with continuous loop for several hours
-  <<<<<<< HEAD
-- # Add a value independately
-  > > > > > > > 29e3a1b56c707263415083802baffd94eb693cd3
+- Implement a function to add a value
