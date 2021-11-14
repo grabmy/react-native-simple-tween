@@ -285,7 +285,10 @@ class SimpleTween {
     if (this.startFunction) {
       this.startFunction(this.currentValues);
     }
-
+    
+    // Set the next process time
+    this.processTime = Date.now() + this.delay + this.updateTime;
+    
     return this;
   }
   
@@ -434,14 +437,13 @@ class SimpleTween {
         this.stop();
       }
     }
+
+    this.processTime = Date.now() + this.updateTime;
   }
 
   stop() {
     this.isPlaying = false;
-    if (this.timeoutId)
-    {
-        clearTimeout(this.timeoutId);
-    }
+    cancelProcessRequest();
     return this;
   }
 
@@ -505,10 +507,21 @@ class SimpleTween {
   }
 
   reset() {
+    this.resetStart();
+  }
+  
+  resetStart() {
     if (this.isPlaying) {
       this.stop();
     }
     this.setValues(this.startValues);
+  }
+  
+  resetEnd() {
+    if (this.isPlaying) {
+      this.stop();
+    }
+    this.setValues(this.endValues);
   }
 }
 
