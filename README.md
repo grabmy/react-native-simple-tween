@@ -1,16 +1,27 @@
 # react-native-simple-tween
 
-Simple variables transition between 2 values based on setTimeout.
+Simple variables transition between 2 values with ease.
 
-This library will animate values (floats and hex colors) and call an update function to retrieve the modified values.
+This library will animate values (floats and hex colors) and call an update function to retrieve the modified values, based on requestAnimationFrame and setTimeout, setInterval as fallback.
 
-## Install
+## Table of Contents
+
+1. [Install](#install)
+2. [Quick starts](#quick-start)
+3. [Features](#features)
+4. [API](#api)
+5. [Status variables](#status-variables)
+5. [Changelog](#changelog)
+
+## Install 
+<a name="install"></a>
 
 ```
 npm install --save react-native-simple-tween
 ```
 
-## Quick starts
+## Quick start
+<a name="quick-start"></a>
 
 ```js
 import SimpleTween from "react-native-simple-tween";
@@ -35,12 +46,68 @@ tween.onUpdate((values) => {
 tween.start();
 ```
 
+## Features
+<a name="features"></a>
+
 ### Chain the functions
 
 ```js
-tween.setDuration(500).setDelay(100).setCycle(true).start();
+tween.setDuration(500).setStartDelay(100).setCycle(true).start();
 
 tween.pause().removeValue({ x: 0 }).resume();
+```
+
+
+### Events system
+
+List of events:
+- Start: triggered when the animation start
+- End: triggered when the animation end and stop
+- Cycle: triggered when the animation reach 100% and reverse direction
+- Repeat: triggered when the animation repeat
+- Message: triggered when emit a message on important actions
+
+```
+With no cycle and no repeat
+Start          End
+0%-->--50%-->--100%
+
+With cycle and no repeat
+Start          Cycle            End
+0%-->--50%-->--100%-->--50%-->--0%
+
+With no cycle and repeat = 2
+Start          Repeat              End
+0%-->--50%-->--100%-0%-->--50%-->--100%
+
+With cycle and repeat = 2
+Start  Cycle    Repeat  Cycle    End
+0%-->--100%-->--0%-->---100%-->--0%
+```
+
+### Duration and delays
+
+The duration and delays are not perfectly accurate, depending on the device and task priorities. The animated values are updated when the device call requestAnimationFrame (setTimeout and setInterval as fallback) and the device might launch the updates with a few ms of shift. It means that the animation on loop may accumulate a big variation in time.
+
+There is different types of delay:
+- startDelay: delay before starting to animate the values at start
+- cycleDelay: delay before cycle backward, only used with setCycle(true)
+- repeatDelay: delay before repeating the animation, only used with repeat greater than 1 (repeat if default to 1)
+- endDelay: delay after ending the animation
+
+During delays, the animation is assumed as playing.
+
+Duration is the time in ms to go from start to end. If the animation cycle, it will go from start to end in the duration and from end to start in the duration, so the whole animation will have 2 times the duration.
+
+If the animation repeat, the whole duration will be multiplied by the number of repeat.
+
+For example, an animation with 100ms duration, cycle = true and repeat = 2 will have a total time of 400ms from start to end.
+
+```
+With cycle, repeat = 2 and duration = 100 ms
+0ms    100ms    200ms   300ms    400ms
+Start  Cycle    Repeat  Cycle    End
+0%-->--100%-->--0%-->---100%-->--0%
 ```
 
 ## API
@@ -62,6 +129,8 @@ const tween = new SimpleTween(from, to, 1000);
 
 Call a function and retrieve the values every time the values are updated (depends on the update time, changed with setUpdateTime).
 
+The update event can be triggered multiple times with the same values, on cycle and repeat for example.
+
 ```js
 // Register update function
 tween.onUpdate((values) => {
@@ -82,12 +151,34 @@ tween.onStart((values) => {
 
 #### onEnd (func)
 
-Call a function and retrieve the values every time the animation ends. It will be called on start and every time the animation reach an end in cycle mode.
+Call a function and retrieve the values every time the animation ends. It will be called when the animation reach the end and stops.
 
 ```js
 // Register end function
 tween.onEnd((values) => {
   console.log("end values", values);
+});
+```
+
+#### onCycle (func)
+
+Call a function and retrieve the values every time the animation reach 100% and cycle back.
+
+```js
+// Register cycle function
+tween.onCycle((values) => {
+  console.log("cycle values", values);
+});
+```
+
+#### onRepeat (func)
+
+Call a function and retrieve the values every time the animation repeats. Only works if repeat greated than 1.
+
+```js
+// Register repeat function
+tween.onRepeat((values) => {
+  console.log("repeat values", values);
 });
 ```
 
@@ -184,7 +275,6 @@ Remove a value from the animation. Animation will not stop and the value will no
 ```js
 // Remove y value
 tween.removeValue('y');
->>>>>>> 29e3a1b56c707263415083802baffd94eb693cd3
 ```
 
 ### Settings
@@ -234,23 +324,54 @@ Reset values to end values when ending the animation. Default false.
 tween.setCycle(true);
 ```
 
-#### setDelay (ms)
+#### setDelays (startDelay, cycleDelay, repeatDelay, endDelay)
 
-Set a delay before starting the animation in ms. Default is 0.
+Set start, cycle, repeat and end delay in ms. Default is 0.
+
+```js
+// Set the delays
+tween.setDelays(100, 100, 100, 0);
+```
+
+#### setStartDelay (ms)
+
+Set the start delay in ms. Default is 0.
 
 ```js
 // Set the delay
-tween.setDelay(500);
+tween.setStartDelay(100);
+```
+
+#### setEndDelay (ms)
+
+Set the end delay in ms. Default is 0.
+
+```js
+// Set the delay
+tween.setEndDelay(100);
+```
+
+#### setCycleDelay (ms)
+
+Set the cycle delay in ms. Default is 0.
+
+```js
+// Set the delay
+tween.setCycleDelay(100);
+```
+
+#### setRepeatDelay (ms)
+
+Set the repeat delay in ms. Default is 0.
+
+```js
+// Set the delay
+tween.setRepeatDelay(100);
 ```
 
 #### setEasing (func)
 
 Set if the animation easing function. There is a list of usefull easing function in SimpleTween.Easing :
-<<<<<<< HEAD
-
-=======
-
-> > > > > > > 29e3a1b56c707263415083802baffd94eb693cd3
 
 - Linear (None)
 - Quadratic (In, Out, InOut)
@@ -274,6 +395,35 @@ tween.setEasing(SimpleTween.Easing.Quartic.In);
 tween.setEasing(SimpleTween.Easing.Sinusoidal.InOut);
 ```
 
+## Status variables
+
+### isPlaying
+
+Returns true when playing. On delays, animation is assumed as playing.
+
+```js
+// Show if the animation is playing
+console.log(tween.isPlaying);
+```
+
+### isPaused
+
+Return true when paused.
+
+```js
+// Show if the animation is paused
+console.log(tween.isPaused);
+```
+
+### isAnimating
+
+Return true if the values are currently transitioning between start and end, not waiting or paused.
+
+```js
+// Show if the animation is transitioning
+console.log(tween.isAnimating);
+```
+
 ## Changelog
 
 ### Version 0.3
@@ -281,13 +431,28 @@ tween.setEasing(SimpleTween.Easing.Sinusoidal.InOut);
 ## DONE
 
 - Implement request animation frame
-- Add setInterval in backup
+- Add setTimeout / setInterval as fallback
 - Pausing and starting trigger update event
-- getValues() return the current values
-- Adding tests
+- Function getValues() returns the current values
+- Adding tests with command "npm test"
+- Improve event system with cycle and repeat events
+- Rename delay to startDelay
 
 ## TODO
 
-- Add sequence animation
+- Add cycleDelay, endDelay and repeatDelay
+- Function to disable requestAnimationFrame
+- Add test to check disable requestAnimationFrame
+- Add tests to new delays
+- Animate deg and px string
+- Implement deep values in objects / arrays to be animated
+- Add smooth option to damp velocity
+- Add sequence animation with names
 - Test with continuous loop for several hours
 - Implement a function to add a value
+- Don't trigger update when values did not change
+
+## PENDING
+
+- Synchronize animation in a group
+- Synchronize start between SimpleTween instances
