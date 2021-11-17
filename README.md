@@ -91,6 +91,17 @@ tween.onEnd((values) => {
 });
 ```
 
+#### onMessage (message)
+
+Call a function and provide a system message for debug purpose.
+
+```js
+// Show the message in console
+tween.onMessage((message) => {
+  console.log("Message: " + message);
+});
+```
+
 ### Controls
 
 #### start ()
@@ -265,14 +276,18 @@ tween.setEasing(SimpleTween.Easing.Sinusoidal.InOut);
 
 ## Changelog
 
-### Version 0.2.0
+### Version 0.3
 
 ## DONE
 
-## TODO
-
 - Implement request animation frame
 - Add setInterval in backup
-- Add chaining animation
+- Pausing and starting trigger update event
+- getValues() return the current values
+- Adding tests
+
+## TODO
+
+- Add sequence animation
 - Test with continuous loop for several hours
 - Implement a function to add a value

@@ -87,6 +87,8 @@ class SimpleTween {
   pauseTime = 0;
   pauseStartTime = 0;
   pauseEndTime = 0;
+  
+  linearProgress = 0;
 
   /**
    * Construct
@@ -96,20 +98,19 @@ class SimpleTween {
    * @param {integer} duration Duration in ms
    */
   constructor(startValues, endValues, duration) {
-      this.startValues = startValues;
-      this.endValues = endValues;
-      this.currentValues = this.getValues(this.startValues, this.endValues);
-      this.duration = duration;
+    this.startValues = startValues;
+    this.endValues = endValues;
+    this.currentValues = this.getValues(this.startValues, this.endValues);
+    this.duration = duration;
 
-      this.forward();
+    this.forward();
 
-      this.process = this.process.bind(this);
-      
-      this.timeoutId = 0;
+    this.process = this.process.bind(this);
     
-      this.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame
-        || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
-      this.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
+    this.timeoutId = 0;
+    this.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame
+      || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+    this.cancelAnimationFrame = window.cancelAnimationFrame || window.mozCancelAnimationFrame;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +144,7 @@ class SimpleTween {
   }
 
   getValues(baseValues, defaultValues, previousValues) {
-    const values = {};
+    const values = Object.assign({}, this.currentValues);
     if (baseValues) {
       const baseKeys = Object.keys(baseValues);
       for (let index = 0; index < baseKeys.length; index++) {
@@ -261,11 +262,20 @@ class SimpleTween {
     return this;
   }
   
+  onMessage(messageFunction) {
+    this.messageFunction = messageFunction;
+    return this;
+  }
+  
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Control functions
   
   start(resetReapeat = true)
   {
+    if (this.messageFunction) {
+      this.messageFunction('Starting animation');
+    }
+
     if (this.isPlaying) {
       this.stop();
     }
@@ -286,16 +296,28 @@ class SimpleTween {
       this.startFunction(this.currentValues);
     }
     
+    if (this.updateFunction) {
+      this.updateFunction(this.currentValues);
+    }
+    
     // Set the next process time
     this.processTime = Date.now() + this.delay + this.updateTime;
     
+    this.setProcessRequest();
+
     return this;
   }
   
   setProcessRequest() {
     if (this.requestAnimationFrame) {
-      this.animationFrameId = this.requestAnimationFrame(Process);
+      if (this.messageFunction) {
+        this.messageFunction('Set process progress: using requestAnimationFrame');
+      }
+      this.animationFrameId = this.requestAnimationFrame(this.process);
     } else {
+      if (this.messageFunction) {
+        this.messageFunction('Set process progress: using setTimeout and setInterval');
+      }
       this.timeoutId = setTimeout(() => {
           this.process();
       }, this.updateTime);
@@ -309,10 +331,10 @@ class SimpleTween {
   setNextProcessRequest() {
     if (!this.requestAnimationFrame) {
       if (this.timeoutId) {
-        this.cancelTimeout(this.timeoutId);
+        clearTimeout(this.timeoutId);
       }
       if (this.intervalId) {
-        this.cancelInterval(this.intervalId);
+        clearInterval(this.intervalId);
       }
       this.timeoutId = setTimeout(() => {
           this.process();
@@ -328,10 +350,10 @@ class SimpleTween {
       this.cancelAnimationFrame(this.animationFrameId);
     }
     if (this.timeoutId) {
-      this.cancelTimeout(this.timeoutId);
+      clearTimeout(this.timeoutId);
     }
     if (this.intervalId) {
-      this.cancelInterval(this.intervalId);
+      clearInterval(this.intervalId);
     }
   }
   
@@ -354,26 +376,91 @@ class SimpleTween {
       return;
     }
 
-    let linearProgress = 0;
-    linearProgress = Date.now() < this.endTime ? 1 - (this.endTime - Date.now()) / (this.endTime - this.startTime) : 1;
+    this.computeValues();
 
-    if (linearProgress <= 0) {
-        linearProgress = 0;
-    } else if (linearProgress > 1) {
-        linearProgress = 1;
+    if (this.updateFunction) {
+      this.updateFunction(this.currentValues);
+    }
+    
+    //console.log('linearProgress = ' + this.linearProgress + ', direction = ' + this.direction);
+    
+    // end at 100% forward
+    if (this.linearProgress >= 1 && this.direction === 1) {
+      if (this.cycle) {
+        // cycle backward
+        this.reverse();
+        this.start(false);
+      } else if (this.repeatRest > 1) {
+        // Repeat
+        this.repeatRest--;
+        this.stop();
+        if (this.resetOnEnd) {
+          this.getValues(this.startValues, this.endValues, this.currentValues);
+          this.updateFunction(this.currentValues);
+        }
+        this.start(false);
+      } else {
+        // the end
+        if (this.repeatRest > 0) {
+          this.repeatRest--;
+        }
+        if (this.endFunction) {
+          this.endFunction(this.currentValues);
+        }
+        this.stop();
+        if (this.resetOnEnd) {
+          this.getValues(this.startValues, this.endValues, this.currentValues);
+          this.updateFunction(this.currentValues);
+        }
+      }
+    } else 
+    // end at 0% backward
+    if (this.linearProgress >= 1 && this.direction === -1) {
+      if (this.repeatRest > 1) {
+        // Repeat
+        this.repeatRest--;
+        if (this.resetOnEnd) {
+          this.getValues(this.startValues, this.endValues, this.currentValues);
+          this.updateFunction(this.currentValues);
+        }
+        this.start(false);
+      } else {
+        // the end
+        if (this.repeatRest > 0) {
+          this.repeatRest--;
+        }
+        if (this.endFunction) {
+          this.endFunction(this.currentValues);
+        }
+        this.stop();
+        if (this.resetOnEnd) {
+          this.getValues(this.startValues, this.endValues, this.currentValues);
+          this.updateFunction(this.currentValues);
+        }
+      }
     }
 
-    let progress = linearProgress;
+
+
+
+    this.processTime = Date.now() + this.updateTime;
+    this.setNextProcessRequest();
+  }
+
+  computeValues() {
+    this.linearProgress = 0;
+    this.linearProgress = Date.now() < this.endTime ? 1 - (this.endTime - Date.now()) / (this.endTime - this.startTime) : 1;
+
+    if (this.linearProgress <= 0) {
+      this.linearProgress = 0;
+    } else if (this.linearProgress > 1) {
+      this.linearProgress = 1;
+    }
+
+    let progress = this.linearProgress;
     if (this.easing)
     {
       progress = this.easing(progress);
-    }
-
-    if (Date.now() < this.endTime)
-    {
-        this.timeoutId = setTimeout(() => {
-            this.process();
-        }, this.updateTime);
     }
 
     const keys = Object.keys(this.currentValues);
@@ -401,60 +488,44 @@ class SimpleTween {
           this.currentValues[name] = this.rgbToHex(newColor);
         }
       }      
+    }    
+  }
+
+  stop() {
+    if (!this.isPlaying) {
+      return this;
     }
+
+    if (this.messageFunction) {
+      this.messageFunction('Stopping animation');
+    }
+
+    this.computeValues();
+    this.isPlaying = false;
+    this.cancelProcessRequest();
 
     if (this.updateFunction) {
       this.updateFunction(this.currentValues);
     }
 
-    if (linearProgress >= 1 || Date.now() > this.endTime)
-    {
-      if (this.resetOnEnd) {
-        this.getValues(this.startValues, this.endValues, this.currentValues);
-        this.updateFunction(this.currentValues);
-      }
-
-      if (this.endFunction) {
-        this.endFunction(this.currentValues);
-      }
-      this.stop();
-      if (this.cycle)
-      {
-        this.reverse();
-        if (this.direction == -1) {
-          this.start(false);
-        }
-      }
-    }
-
-    if (!this.isPlaying && this.repeatRest) {
-      if (this.repeatRest > 0) {
-        this.repeatRest--;
-      }
-      if (this.repeatRest !== 0) {
-        this.start(true);
-      } else {
-        this.stop();
-      }
-    }
-
-    this.processTime = Date.now() + this.updateTime;
-  }
-
-  stop() {
-    this.isPlaying = false;
-    cancelProcessRequest();
     return this;
   }
 
   pause() {
-    if (this.isPaused) {
+    if (this.isPaused || !this.isPlaying) {
       return this;
     }
+
+    this.computeValues();
+
     this.isPaused = true;
     this.pauseTime = Date.now();
     this.pauseStartTime = this.startTime - this.pauseTime;
     this.pauseEndTime = this.endTime - this.pauseTime;
+
+    if (this.updateFunction) {
+      this.updateFunction(this.currentValues);
+    }
 
     return this;
   }
