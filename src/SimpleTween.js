@@ -74,9 +74,9 @@ class SimpleTween {
   duration = 0;
 
   /**
-   * Delay before launching animation at start and end
+   * Delay when starting animation at start
    */
-  delay = 0;
+  startDelay = 0;
 
   /**
    * Number of times to repeat for each animation
@@ -198,8 +198,31 @@ class SimpleTween {
     return this;
   }
 
-  setDelay(delay) {
-    this.delay = delay;
+  setDelays(startDelay, cycleDelay, repeatDelay, endDelay) {
+    this.startDelay = startDelay;
+    this.cycleDelay = cycleDelay;
+    this.repeatDelay = repeatDelay;
+    this.endDelay = endDelay;
+    return this;
+  }
+
+  setStartDelay(startDelay) {
+    this.startDelay = startDelay;
+    return this;
+  }
+
+  setEndDelay(endDelay) {
+    this.endDelay = endDelay;
+    return this;
+  }
+
+  setCycleDelay(cycleDelay) {
+    this.cycleDelay = cycleDelay;
+    return this;
+  }
+
+  setRepeatDelay(repeatDelay) {
+    this.repeatDelay = repeatDelay;
     return this;
   }
 
@@ -262,6 +285,16 @@ class SimpleTween {
     return this;
   }
   
+  onCycle(cycleFunction) {
+    this.cycleFunction = cycleFunction;
+    return this;
+  }
+  
+  onRepeat(repeatFunction) {
+    this.repeatFunction = repeatFunction;
+    return this;
+  }
+  
   onMessage(messageFunction) {
     this.messageFunction = messageFunction;
     return this;
@@ -270,7 +303,7 @@ class SimpleTween {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   // Control functions
   
-  start(resetReapeat = true)
+  start(resetRepeat = true)
   {
     if (this.messageFunction) {
       this.messageFunction('Starting animation');
@@ -280,19 +313,36 @@ class SimpleTween {
       this.stop();
     }
 
-    if (resetReapeat) {
+    if (resetRepeat) {
       this.repeatRest = this.repeat;
     }
 
-    this.startTime = Date.now() + this.delay;
-    this.endTime = Date.now() + this.delay + this.duration;
+    this.isAnimating = false;
+
+    this.startTime = Date.now();
+    this.endTime = Date.now() + this.duration;
+    if (this.cycle && this.direction === 1) {
+      this.waitTime = Date.now() + this.duration + this.cycleDelay;
+    } else if (!this.cycle && this.repeatRest > 1 || this.direction === -1 && this.repeatRest > 1) {
+      this.waitTime = Date.now() + this.duration + this.repeatDelay;
+    } else {
+      this.waitTime = Date.now() + this.duration + this.endDelay;
+    }
+    
+    // Adding delay on first start
+    if (resetRepeat) {
+      this.startTime += this.startDelay;
+      this.endTime += this.startDelay;
+      this.waitTime += this.startDelay;
+    }
+
     this.isPlaying = true;
 
     if (this.resetOnStart && this.direction === 1) {
       this.currentValues = this.getValues(this.startValues, this.endValues, this.currentValues);
     }
 
-    if (this.startFunction) {
+    if (resetRepeat && this.startFunction) {
       this.startFunction(this.currentValues);
     }
     
@@ -301,7 +351,7 @@ class SimpleTween {
     }
     
     // Set the next process time
-    this.processTime = Date.now() + this.delay + this.updateTime;
+    this.processTime = Date.now() + this.updateTime;
     
     this.setProcessRequest();
 
@@ -364,7 +414,7 @@ class SimpleTween {
       return;
     }
     
-    // If animation if not started, skip to next process
+    // If animation is not started, skip to next process
     if (Date.now() < this.startTime) {
       this.setNextProcessRequest();
       return;
@@ -376,22 +426,42 @@ class SimpleTween {
       return;
     }
 
+    // Animation is waiting in delay
+    if (Date.now() > this.endTime && Date.now() < this.waitTime) {
+      // Update values only once when reaching endTime
+      if (!this.isAnimating) {
+        this.computeValues();
+        if (this.updateFunction) {
+          this.updateFunction(this.currentValues);
+        }
+        this.isAnimating = true;
+      }
+      this.setNextProcessRequest();
+      return;
+    }
+    
     this.computeValues();
 
     if (this.updateFunction) {
       this.updateFunction(this.currentValues);
     }
     
-    //console.log('linearProgress = ' + this.linearProgress + ', direction = ' + this.direction);
+    // console.log('linearProgress = ' + this.linearProgress + ', direction = ' + this.direction);
     
     // end at 100% forward
     if (this.linearProgress >= 1 && this.direction === 1) {
       if (this.cycle) {
         // cycle backward
+        if (this.cycleFunction) {
+          this.cycleFunction(this.currentValues);
+        }
         this.reverse();
         this.start(false);
       } else if (this.repeatRest > 1) {
         // Repeat
+        if (this.repeatFunction) {
+          this.repeatFunction(this.currentValues);
+        }
         this.repeatRest--;
         this.stop();
         if (this.resetOnEnd) {
@@ -400,10 +470,12 @@ class SimpleTween {
         }
         this.start(false);
       } else {
-        // the end
+        // animation end
         if (this.repeatRest > 0) {
           this.repeatRest--;
         }
+
+        // end now
         if (this.endFunction) {
           this.endFunction(this.currentValues);
         }
@@ -416,8 +488,12 @@ class SimpleTween {
     } else 
     // end at 0% backward
     if (this.linearProgress >= 1 && this.direction === -1) {
+      this.forward();
       if (this.repeatRest > 1) {
         // Repeat
+        if (this.repeatFunction) {
+          this.repeatFunction(this.currentValues);
+        }
         this.repeatRest--;
         if (this.resetOnEnd) {
           this.getValues(this.startValues, this.endValues, this.currentValues);
@@ -425,7 +501,7 @@ class SimpleTween {
         }
         this.start(false);
       } else {
-        // the end
+        // animation end
         if (this.repeatRest > 0) {
           this.repeatRest--;
         }
@@ -439,9 +515,6 @@ class SimpleTween {
         }
       }
     }
-
-
-
 
     this.processTime = Date.now() + this.updateTime;
     this.setNextProcessRequest();
@@ -502,6 +575,7 @@ class SimpleTween {
 
     this.computeValues();
     this.isPlaying = false;
+    this.isAnimating = true;
     this.cancelProcessRequest();
 
     if (this.updateFunction) {

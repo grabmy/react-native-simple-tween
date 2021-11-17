@@ -3,6 +3,7 @@
 const expect  = require('chai').expect;
 const SimpleTween = require('../index.js');
 
+
 // Simulating requestAnimationFrame
 window.requestAnimationFrame = (fn) => {
     return setInterval(fn, 15);
@@ -11,24 +12,32 @@ window.cancelAnimationFrame = (id) => {
     clearInterval(id);
 };
 
+it('Test', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 50);
+    const events = [];
 
-
-it('Testing', function(done) {
-    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 500);
-
-    tween.setUpdateTime(50).setCycle(true).onMessage(message => {
-        console.log('message: ' + message);
-    }).onStart((values) => {
-        console.log('on start', values);
+    tween.setUpdateTime(10).setStartDelay(1000).setEndDelay(1000).setCycleDelay(1000).setRepeatDelay(1000).setRepeat(2).setCycle(false).onStart((values) => {
+        events.push('start');
+        console.log('=====> start');
+    }).onCycle((values) => {
+        events.push('cycle');
+        console.log('=====> cycle');
     }).onUpdate((values) => {
-        console.log('on update', values);
+        console.log(Math.round(values.test));
+    }).onRepeat((values) => {
+        events.push('repeat');
+        console.log('=====> repeat');
     }).onEnd((values) => {
-        console.log('on end', values);
+        events.push('end');
+        console.log('=====> end');
         done();
     }).start();
+
+    setTimeout(() => {
+        //expect(events).to.eql(['start', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'end' ]);
+        //done();
+    }, 2000);
 });
-
-
 
 /*
 it('Triggers start event', function(done) {
@@ -51,7 +60,7 @@ it('Triggers end event', function(done) {
     const tween = new SimpleTween({ test: 0, }, { test: 1, }, 100);
     let passed = false;
 
-    tween.setUpdateTime(50).onStop(values => {
+    tween.setUpdateTime(50).onEnd(values => {
         passed = true;
     }).start();
     
@@ -97,6 +106,24 @@ it('Triggers message event', function(done) {
 });
 
 
+it('Triggers order with cycle and repeat ', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 100);
+    const events = [];
+
+    tween.setUpdateTime(25).setRepeat(4).setCycle(true).onStart((values) => {
+        events.push('start');
+    }).onCycle((values) => {
+        events.push('cycle');
+    }).onRepeat((values) => {
+        events.push('repeat');
+    }).onEnd((values) => {
+        events.push('end');
+        expect(events).to.eql(['start', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'end' ]);
+        done();
+    }).start();
+});
+
+
 it('Use requestFrameAnimation', function(done) {
     const tween = new SimpleTween({ test: 0, }, { test: 1, }, 100);
     let passed = false;
@@ -123,7 +150,7 @@ it('Tween number', function(done) {
         expect(values.test).to.equal(0);
     }).onUpdate(values => {
         expect(values.test).be.within(0, 1);
-    }).onStop(values => {
+    }).onEnd(values => {
         expect(values.test).to.equal(1);
     }).start();
     
@@ -141,7 +168,7 @@ it('Tween color', function(done) {
     tween.setUpdateTime(50).onStart(values => {
         expect(values.test).to.equal('#000000');
     }).onUpdate(values => {
-    }).onStop(values => {
+    }).onEnd(values => {
         expect(values.test).to.equal('#ffffff');
     }).start();
     
@@ -179,7 +206,7 @@ it('Pause and resume', function(done) {
         tween.stop();
     }, 800);
 
-    tween.setUpdateTime(50).onStop((values) => {
+    tween.setUpdateTime(50).onEnd((values) => {
         stopped = true;
     }).start();
 });
@@ -200,28 +227,7 @@ it('Use delay', function(done) {
         tween.stop();
     }, 400);
 
-    tween.setUpdateTime(25).setDelay(100).onStop((values) => {
-        stopped = true;
-    }).start();
-});
-
-
-it('Use delay', function(done) {
-    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 250);
-    let stopped = false;
-
-    setTimeout(() => {
-        expect(tween.isPlaying).be.eq(true);
-    }, 300);
-
-    setTimeout(() => {
-        expect(tween.isPlaying).be.eq(false);
-        expect(stopped).be.eq(true);
-        done();
-        tween.stop();
-    }, 400);
-
-    tween.setUpdateTime(25).setDelay(100).onStop((values) => {
+    tween.setUpdateTime(25).setDelay(100).onEnd((values) => {
         stopped = true;
     }).start();
 });
@@ -242,37 +248,33 @@ it('Use repeat', function(done) {
         tween.stop();
     }, 1600);
 
-    tween.setUpdateTime(25).setRepeat(5).onStop((values) => {
+    tween.setUpdateTime(25).setRepeat(5).onEnd((values) => {
         stopped = true;
     }).start();
 });
-*/
 
-/*
-it('Restart', function(done) {
-    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 200);
-    let count = 0;
+
+it('Launching the animation after stop', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 100);
+    const events = [];
+
+    tween.setUpdateTime(25).setRepeat(2).onEnd((values) => {
+        events.push('end');
+    }).onStart((values) => {
+        events.push('start');
+    }).start();
 
     setTimeout(() => {
         expect(tween.isPlaying).be.eq(false);
-        expect(count).be.eq(1);
-        console.log('start');
         tween.start();
-    }, 500);
+    }, 300);
 
     setTimeout(() => {
         expect(tween.isPlaying).be.eq(false);
-        expect(count).be.eq(2);
+        expect(events).to.eql(['start', 'end', 'start', 'end' ]);
         done();
         tween.stop();
-    }, 1000);
-
-    tween.setUpdateTime(25).setRepeat(2).onStop((values) => {
-        console.log('on stop');
-        count++;
-    }).onStart((values) => {
-        console.log('on start');
-    }).start();
+    }, 600);
 });
 */
 
