@@ -12,32 +12,116 @@ window.cancelAnimationFrame = (id) => {
     clearInterval(id);
 };
 
-it('Test', function(done) {
-    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 50);
+
+it('Start delay', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 100);
     const events = [];
 
-    tween.setUpdateTime(10).setStartDelay(1000).setEndDelay(1000).setCycleDelay(1000).setRepeatDelay(1000).setRepeat(2).setCycle(false).onStart((values) => {
+    tween.setUpdateTime(10).setStartDelay(200).setEndDelay(0).setCycleDelay(0).setRepeatDelay(0)
+    .setRepeat(1).setCycle(false).onStart((values) => {
         events.push('start');
-        console.log('=====> start');
     }).onCycle((values) => {
         events.push('cycle');
-        console.log('=====> cycle');
-    }).onUpdate((values) => {
-        console.log(Math.round(values.test));
     }).onRepeat((values) => {
         events.push('repeat');
-        console.log('=====> repeat');
     }).onEnd((values) => {
         events.push('end');
-        console.log('=====> end');
-        done();
     }).start();
 
     setTimeout(() => {
-        //expect(events).to.eql(['start', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'repeat', 'cycle', 'end' ]);
-        //done();
-    }, 2000);
+        expect(tween.getValues().test).to.eq(0);
+        expect(events).to.eql(['start']);
+    }, 150);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.gt(0);
+        expect(events).to.eql(['start']);
+    }, 250);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.eq(100);
+        expect(events).to.eql(['start', 'end']);
+        done();
+    }, 350);
 });
+
+
+it('End delay', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 100);
+    const events = [];
+
+    tween.setUpdateTime(10).setStartDelay(0).setEndDelay(200).setCycleDelay(0).setRepeatDelay(0)
+    .setRepeat(1).setCycle(false).onStart((values) => {
+        events.push('start');
+    }).onCycle((values) => {
+        events.push('cycle');
+    }).onRepeat((values) => {
+        events.push('repeat');
+    }).onEnd((values) => {
+        events.push('end');
+    }).start();
+
+    setTimeout(() => {
+        expect(tween.getValues().test).to.gt(0);
+        expect(tween.getValues().test).to.lt(100);
+        expect(events).to.eql(['start']);
+    }, 50);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.eq(100);
+        expect(events).to.eql(['start']);
+    }, 150);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.eq(100);
+        expect(events).to.eql(['start', 'end']);
+        done();
+    }, 350);
+});
+
+
+it('Cycle delay', function(done) {
+    const tween = new SimpleTween({ test: 0, }, { test: 100, }, 100);
+    const events = [];
+
+    tween.setUpdateTime(10).setStartDelay(0).setEndDelay(0).setCycleDelay(200).setRepeatDelay(0)
+    .setRepeat(1).setCycle(true).onStart((values) => {
+        events.push('start');
+    }).onCycle((values) => {
+        events.push('cycle');
+    }).onUpdate((values) => {
+        //console.log(Math.round(values.test));
+    }).onRepeat((values) => {
+        events.push('repeat');
+    }).onEnd((values) => {
+        events.push('end');
+    }).start();
+
+    setTimeout(() => {
+        expect(tween.getValues().test).to.gt(0);
+        expect(tween.getValues().test).to.lt(100);
+        expect(events).to.eql(['start']);
+    }, 50);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.eq(100);
+        expect(events).to.eql(['start']);
+    }, 150);
+    
+    setTimeout(() => {
+        expect(tween.getValues().test).to.gt(0);
+        expect(tween.getValues().test).to.lt(100);
+        expect(events).to.eql(['start', 'cycle']);
+        done();
+    }, 350);
+
+    setTimeout(() => {
+        expect(tween.getValues().test).to.eq(0);
+        expect(events).to.eql(['start', 'cycle', 'end']);
+    }, 450);
+    
+});
+
 
 /*
 it('Triggers start event', function(done) {

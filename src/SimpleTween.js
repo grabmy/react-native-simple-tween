@@ -317,7 +317,7 @@ class SimpleTween {
       this.repeatRest = this.repeat;
     }
 
-    this.isAnimating = false;
+    this.hasEnded = false;
 
     this.startTime = Date.now();
     this.endTime = Date.now() + this.duration;
@@ -429,12 +429,12 @@ class SimpleTween {
     // Animation is waiting in delay
     if (Date.now() > this.endTime && Date.now() < this.waitTime) {
       // Update values only once when reaching endTime
-      if (!this.isAnimating) {
+      if (!this.hasEnded) {
         this.computeValues();
         if (this.updateFunction) {
           this.updateFunction(this.currentValues);
         }
-        this.isAnimating = true;
+        this.hasEnded = true;
       }
       this.setNextProcessRequest();
       return;
@@ -575,7 +575,7 @@ class SimpleTween {
 
     this.computeValues();
     this.isPlaying = false;
-    this.isAnimating = true;
+    this.hasEnded = true;
     this.cancelProcessRequest();
 
     if (this.updateFunction) {

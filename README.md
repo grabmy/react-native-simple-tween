@@ -11,9 +11,10 @@ This library will animate values (floats and hex colors) and call an update func
 3. [Features](#features)
 4. [API](#api)
 5. [Status variables](#status-variables)
-5. [Changelog](#changelog)
+6. [Changelog](#changelog)
 
-## Install 
+## Install
+
 <a name="install"></a>
 
 ```
@@ -21,6 +22,7 @@ npm install --save react-native-simple-tween
 ```
 
 ## Quick start
+
 <a name="quick-start"></a>
 
 ```js
@@ -47,6 +49,7 @@ tween.start();
 ```
 
 ## Features
+
 <a name="features"></a>
 
 ### Chain the functions
@@ -57,10 +60,10 @@ tween.setDuration(500).setStartDelay(100).setCycle(true).start();
 tween.pause().removeValue({ x: 0 }).resume();
 ```
 
-
 ### Events system
 
 List of events:
+
 - Start: triggered when the animation start
 - End: triggered when the animation end and stop
 - Cycle: triggered when the animation reach 100% and reverse direction
@@ -90,6 +93,7 @@ Start  Cycle    Repeat  Cycle    End
 The duration and delays are not perfectly accurate, depending on the device and task priorities. The animated values are updated when the device call requestAnimationFrame (setTimeout and setInterval as fallback) and the device might launch the updates with a few ms of shift. It means that the animation on loop may accumulate a big variation in time.
 
 There is different types of delay:
+
 - startDelay: delay before starting to animate the values at start
 - cycleDelay: delay before cycle backward, only used with setCycle(true)
 - repeatDelay: delay before repeating the animation, only used with repeat greater than 1 (repeat if default to 1)
@@ -117,8 +121,8 @@ Start  Cycle    Repeat  Cycle    End
 Instanciation takes 3 parameters: the start values, the end values and the duration of the animation.
 
 ```js
-const from = {a: 0, test: 1000};
-const to = {a: 1, test: 0};
+const from = { a: 0, test: 1000 };
+const to = { a: 1, test: 0 };
 // Instanciate the tween object
 const tween = new SimpleTween(from, to, 1000);
 ```
@@ -274,7 +278,7 @@ Remove a value from the animation. Animation will not stop and the value will no
 
 ```js
 // Remove y value
-tween.removeValue('y');
+tween.removeValue("y");
 ```
 
 ### Settings
@@ -413,15 +417,6 @@ Return true when paused.
 ```js
 // Show if the animation is paused
 console.log(tween.isPaused);
-```
-
-### isAnimating
-
-Return true if the values are currently transitioning between start and end, not waiting or paused.
-
-```js
-// Show if the animation is transitioning
-console.log(tween.isAnimating);
 ```
 
 ## Changelog
