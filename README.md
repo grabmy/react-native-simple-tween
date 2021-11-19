@@ -423,8 +423,6 @@ console.log(tween.isPaused);
 
 ### Version 0.3
 
-## DONE
-
 - Implement request animation frame
 - Add setTimeout / setInterval as fallback
 - Pausing and starting trigger update event
@@ -432,22 +430,21 @@ console.log(tween.isPaused);
 - Adding tests with command "npm test"
 - Improve event system with cycle and repeat events
 - Rename delay to startDelay
-
-## TODO
-
 - Add cycleDelay, endDelay and repeatDelay
+
+## Todo in the next version
+
+- Add smooth option to damp velocity
 - Function to disable requestAnimationFrame
 - Add test to check disable requestAnimationFrame
-- Add tests to new delays
 - Animate deg and px string
 - Implement deep values in objects / arrays to be animated
-- Add smooth option to damp velocity
 - Add sequence animation with names
 - Test with continuous loop for several hours
 - Implement a function to add a value
 - Don't trigger update when values did not change
 
-## PENDING
+## Pending analysis
 
 - Synchronize animation in a group
 - Synchronize start between SimpleTween instances
