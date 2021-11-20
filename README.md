@@ -431,20 +431,25 @@ console.log(tween.isPaused);
 - Improve event system with cycle and repeat events
 - Rename delay to startDelay
 - Add cycleDelay, endDelay and repeatDelay
-
-## Todo in the next version
-
 - Add smooth option to damp velocity
+
+## Futur development
+
+### Todo in the next versions
+
 - Function to disable requestAnimationFrame
 - Add test to check disable requestAnimationFrame
+- Add continue function instead of stop().start() to change animation
+- When reverse direction, use the elapsed duration instead of the complete duration
 - Animate deg and px string
 - Implement deep values in objects / arrays to be animated
 - Add sequence animation with names
 - Test with continuous loop for several hours
 - Implement a function to add a value
-- Don't trigger update when values did not change
+- Make an example HTML page with graph.js
 
-## Pending analysis
+### Pending analysis
 
+- Don't trigger update when values did not change (deep compare)
 - Synchronize animation in a group
 - Synchronize start between SimpleTween instances

@@ -187,18 +187,43 @@ class SimpleTween {
     return values;
   }
 
-  setVelocity(previousValues, currentValues) {
+  computeVelocity(previousValues, currentValues) {
+    this.previousValues = Object.assign({}, this.currentValues);
+    this.previousVelocity = Object.assign({}, this.velocity);
+
+    this.deltaTime = (Date.now() - this.velocityTime) / 1000 || 0;
+    this.velocityTime = Date.now();
     const velocity = {};
     const previousKeys = Object.keys(previousValues);
+
     for (let index = 0; index < previousKeys.length; index++) {
       const name = previousKeys[index];
-      if (previousValues[name] !== undefined && currentValues[name] !== undefined &&
-        typeof previousValues[name] == 'number' && typeof currentValues[name] == 'number') {
-        velocity[name] = currentValues[name] - previousValues[name];
+      if (
+        previousValues[name] !== undefined &&
+        currentValues[name] !== undefined &&
+        typeof previousValues[name] == "number" &&
+        typeof currentValues[name] == "number"
+      ) {
+        velocity[name] =
+          this.deltaTime <= 0
+            ? 0
+            : (currentValues[name] - previousValues[name]) / this.deltaTime;
       }
     }
     this.velocity = velocity;
-    console.log('velocity', this.velocity);
+    //console.log("deltaTime", this.deltaTime);
+    //console.log("velocity", this.velocity);
+  }
+
+  triggerEvent(name, data) {
+    if (!this[name + "Function"]) {
+      return;
+    }
+    if (!data) {
+      this[name + "Function"](this.currentValues);
+    } else {
+      this[name + "Function"](data);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -272,9 +297,7 @@ class SimpleTween {
       this.stop();
     }
     this.currentValues = values;
-    if (this.updateFunction) {
-      this.updateFunction(this.currentValues);
-    }
+    this.triggerEvent("update");
     return this;
   }
 
@@ -348,12 +371,10 @@ class SimpleTween {
   // Control functions
 
   start(resetRepeat = true) {
-    if (this.messageFunction) {
-      if (resetRepeat) {
-        this.messageFunction("Starting animation");
-      } else {
-        this.messageFunction("Restarting animation");
-      }
+    if (resetRepeat) {
+      this.triggerEvent("start", "Starting animation");
+    } else {
+      this.triggerEvent("start", "Restarting animation");
     }
 
     if (this.isPlaying) {
@@ -364,36 +385,33 @@ class SimpleTween {
       this.repeatRest = this.repeat;
     }
 
-    this.hasEnded = false;
+    this.hasReachEndTime = false;
 
     this.startTime = Date.now();
     this.endTime = Date.now() + this.duration;
 
     // Setting the next wait delay
     if (this.cycle && this.direction === 1 && this.cycleDelay > 0) {
-      if (this.messageFunction) {
-        this.messageFunction(
-          "Using cycle delay (" + this.cycleDelay + ") for next wait time"
-        );
-      }
+      this.triggerEvent(
+        "message",
+        "Using cycle delay (" + this.cycleDelay + ") for next wait time"
+      );
       this.waitTime = Date.now() + this.duration + this.cycleDelay;
     } else if (
       this.repeatDelay > 0 &&
       ((!this.cycle && this.repeatRest > 1) ||
         (this.direction === -1 && this.repeatRest > 1))
     ) {
-      if (this.messageFunction) {
-        this.messageFunction(
-          "Using repeat delay (" + this.repeatDelay + ") for next wait time"
-        );
-      }
+      this.triggerEvent(
+        "message",
+        "Using repeat delay (" + this.repeatDelay + ") for next wait time"
+      );
       this.waitTime = Date.now() + this.duration + this.repeatDelay;
     } else if (this.endDelay > 0) {
-      if (this.messageFunction) {
-        this.messageFunction(
-          "Using end delay for (" + this.endDelay + ") next wait time"
-        );
-      }
+      this.triggerEvent(
+        "message",
+        "Using end delay for (" + this.endDelay + ") next wait time"
+      );
       this.waitTime = Date.now() + this.duration + this.endDelay;
     }
 
@@ -421,31 +439,27 @@ class SimpleTween {
     //console.log("Date.now()", Date.now());
     this.setProcessRequest();
 
-    if (resetRepeat && this.startFunction) {
-      this.startFunction(this.currentValues);
+    if (resetRepeat) {
+      this.triggerEvent("start");
     }
 
-    if (this.updateFunction) {
-      this.updateFunction(this.currentValues);
-    }
+    this.triggerEvent("update");
 
     return this;
   }
 
   setProcessRequest() {
     if (this.requestAnimationFrame) {
-      if (this.messageFunction) {
-        this.messageFunction(
-          "Set process progress: using requestAnimationFrame"
-        );
-      }
+      this.triggerEvent(
+        "message",
+        "Set process progress: using requestAnimationFrame"
+      );
       this.animationFrameId = this.requestAnimationFrame(this.process);
     } else {
-      if (this.messageFunction) {
-        this.messageFunction(
-          "Set process progress: using setTimeout and setInterval"
-        );
-      }
+      this.triggerEvent(
+        "message",
+        "Set process progress: using setTimeout and setInterval"
+      );
       this.timeoutId = setTimeout(() => {
         this.process();
       }, this.updateTime);
@@ -487,41 +501,30 @@ class SimpleTween {
   process() {
     // On pause we do nothing and skip to next process
     if (this.isPaused) {
-      //console.log("process: isPaused");
       this.setNextProcessRequest();
       return;
     }
 
     // If animation is not started, skip to next process
     if (Date.now() < this.startTime) {
-      //console.log("process: not started");
       this.setNextProcessRequest();
       return;
     }
 
     // If process call too soon, skip to next process
     if (Date.now() < this.processTime) {
-      //console.log("process: processTime", this.processTime);
-      //console.log("process: Date.now()", Date.now());
-      //console.log("process: call too soon");
       this.setNextProcessRequest();
       return;
     }
 
     // Animation is waiting in delay
     if (Date.now() > this.endTime && Date.now() < this.waitTime) {
-      //console.log("process: wait");
-
       // Update values only once when reaching endTime
-      if (!this.hasEnded) {
+      if (!this.hasReachEndTime) {
         this.computeValues();
-        if (this.updateFunction) {
-          this.updateFunction(this.currentValues);
-        }
-        this.hasEnded = true;
-        if (this.messageFunction) {
-          this.messageFunction("Waiting " + (this.waitTime - Date.now()));
-        }
+        this.triggerEvent("update");
+        this.hasReachEndTime = true;
+        this.triggerEvent("message", "Waiting " + (this.waitTime - Date.now()));
       }
       this.setNextProcessRequest();
       return;
@@ -529,31 +532,37 @@ class SimpleTween {
 
     this.computeValues();
 
-    if (this.updateFunction) {
-      this.updateFunction(this.currentValues);
-    }
+    this.checkComplete();
+
+    this.triggerEvent("update");
 
     // console.log('linearProgress = ' + this.linearProgress + ', direction = ' + this.direction);
 
+    this.processTime = Date.now() + this.updateTime;
+    this.setNextProcessRequest();
+  }
+
+  checkComplete() {
     // end at 100% forward
     if (this.linearProgress >= 1 && this.direction === 1) {
       if (this.cycle) {
         // cycle backward
-        if (this.cycleFunction) {
-          this.cycleFunction(this.currentValues);
-        }
+        this.triggerEvent("cycle");
+
         this.reverse();
         this.start(false);
       } else if (this.repeatRest > 1) {
         // Repeat
-        if (this.repeatFunction) {
-          this.repeatFunction(this.currentValues);
-        }
+        this.triggerEvent("repeat");
         this.repeatRest--;
         this.stop();
         if (this.resetOnEnd) {
-          this.getValues(this.startValues, this.endValues, this.currentValues);
-          this.updateFunction(this.currentValues);
+          this.currentValues = this.getValues(
+            this.startValues,
+            this.endValues,
+            this.currentValues
+          );
+          this.triggerEvent("update");
         }
         this.start(false);
       } else {
@@ -563,13 +572,15 @@ class SimpleTween {
         }
 
         // end now
-        if (this.endFunction) {
-          this.endFunction(this.currentValues);
-        }
+        this.triggerEvent("end");
         this.stop();
         if (this.resetOnEnd) {
-          this.getValues(this.startValues, this.endValues, this.currentValues);
-          this.updateFunction(this.currentValues);
+          this.currentValues = this.getValues(
+            this.startValues,
+            this.endValues,
+            this.currentValues
+          );
+          this.triggerEvent("update");
         }
       }
     }
@@ -578,13 +589,15 @@ class SimpleTween {
       this.forward();
       if (this.repeatRest > 1) {
         // Repeat
-        if (this.repeatFunction) {
-          this.repeatFunction(this.currentValues);
-        }
+        this.triggerEvent("repeat");
         this.repeatRest--;
         if (this.resetOnEnd) {
-          this.getValues(this.startValues, this.endValues, this.currentValues);
-          this.updateFunction(this.currentValues);
+          this.currentValues = this.getValues(
+            this.startValues,
+            this.endValues,
+            this.currentValues
+          );
+          this.triggerEvent("update");
         }
         this.start(false);
       } else {
@@ -592,26 +605,24 @@ class SimpleTween {
         if (this.repeatRest > 0) {
           this.repeatRest--;
         }
-        if (this.endFunction) {
-          this.endFunction(this.currentValues);
-        }
+        this.triggerEvent("end");
         this.stop();
         if (this.resetOnEnd) {
-          this.getValues(this.startValues, this.endValues, this.currentValues);
-          this.updateFunction(this.currentValues);
+          this.currentValues = this.getValues(
+            this.startValues,
+            this.endValues,
+            this.currentValues
+          );
+          this.triggerEvent("update");
         }
       }
     }
-
-    this.processTime = Date.now() + this.updateTime;
-    this.setNextProcessRequest();
   }
 
   computeValues() {
-    console.log("-----------------------");
-    console.log("computeValues");
-    this.previousValues = Object.assign({}, this.currentValues);
-    console.log("updating: previous", this.previousValues);
+    //console.log("-----------------------");
+    //console.log("computeValues");
+    this.computeVelocity(this.previousValues, this.currentValues);
 
     this.linearProgress = 0;
     this.linearProgress =
@@ -645,9 +656,6 @@ class SimpleTween {
         endValue = this.startValues[name];
       }
 
-      //console.log("startValue = " + startValue);
-      //console.log("endValue = " + endValue);
-
       // Check if must apply transition to this value
       if (
         startValue !== endValue &&
@@ -656,24 +664,30 @@ class SimpleTween {
       ) {
         if (typeof startValue == "number" && typeof endValue == "number") {
           // For float
-          this.currentValues[name] =
-            startValue + (endValue - startValue) * progress;
+          const newValue = startValue + (endValue - startValue) * progress;
+          //console.log("compute new velocity");
+          const currentVelocity = this.deltaTime
+            ? (newValue - this.currentValues[name]) / this.deltaTime
+            : 0;
+          const previousVelocity =
+            this.previousVelocity[name] !== undefined
+              ? this.previousVelocity[name]
+              : 0;
 
-          // smooth value
-          /*
-          let smoothValue = this.previousValues[name];
-          if (this.smooth <= 0) {
-            smoothValue = undefined;
+          // Without smooth
+          //this.currentValues[name] = newValue;
+
+          // Apply smooth velocity here
+          if (this.deltaTime) {
+            this.currentValues[name] = this.applyVelocity(
+              newValue,
+              currentVelocity,
+              previousVelocity
+            );
+          } else {
+            // No time has passed, just set the values
+            this.currentValues[name] = newValue;
           }
-          this.currentValues[name] = this.smoothValue(
-            this.currentValues[name],
-            smoothValue
-          );
-          */
-          
-          //console.log("smoothValue = " + smoothValue);
-          //this.currentValues[name] =
-          //  (this.currentValues[name] + smoothValue) / 2;
         } else if (
           typeof startValue == "string" &&
           typeof endValue == "string"
@@ -690,25 +704,37 @@ class SimpleTween {
         }
       }
     }
-
-    this.setVelocity(this.previousValues, this.currentValues);
   }
 
-  smoothValue(value, previous) {
-    console.log("-------------------- smoothValue");
-    console.log("value", value);
-    console.log("previous", previous);
-    console.log("smooth", this.smooth);
-    console.log("linearProgress", this.linearProgress);
+  applyVelocity(value, currentVelocity, previousVelocity) {
+    //console.log("-------------------- smoothValue");
+    //console.log("value", value);
+    //console.log("currentVelocity", currentVelocity);
+    //console.log("previousVelocity", previousVelocity);
+    //console.log("smooth", this.smooth);
+    //console.log("linearProgress", this.linearProgress);
 
-    if (!this.smoothValue || this.smooth == 0 || this.linearProgress == 1) {
+    if (currentVelocity == 0 || this.smooth == 0 || this.linearProgress == 1) {
       return value;
     }
+
     let result =
-      value - (value - previous) * (1 - this.linearProgress) * this.smooth;
-    //console.log("result", result);
+      value +
+      ((previousVelocity - currentVelocity) *
+        (1 - this.linearProgress) *
+        this.smooth *
+        this.deltaTime) /
+        3;
+    //console.log("- result = ", result);
+    return result;
+    /*
+    let result =
+      value - (velocity) * (1 - this.linearProgress) * this.smooth;
+    console.log("smoothValue result", result);
+    console.log("-");
 
     return result;
+    */
   }
 
   stop() {
@@ -716,18 +742,13 @@ class SimpleTween {
       return this;
     }
 
-    if (this.messageFunction) {
-      this.messageFunction("Stopping animation");
-    }
+    this.triggerEvent("message", "Stopping animation");
 
     this.computeValues();
     this.isPlaying = false;
-    this.hasEnded = true;
+    this.hasReachEndTime = true;
     this.cancelProcessRequest();
-
-    if (this.updateFunction) {
-      this.updateFunction(this.currentValues);
-    }
+    this.triggerEvent("update");
 
     return this;
   }
@@ -744,9 +765,7 @@ class SimpleTween {
     this.pauseStartTime = this.startTime - this.pauseTime;
     this.pauseEndTime = this.endTime - this.pauseTime;
 
-    if (this.updateFunction) {
-      this.updateFunction(this.currentValues);
-    }
+    this.triggerEvent("update");
 
     return this;
   }
