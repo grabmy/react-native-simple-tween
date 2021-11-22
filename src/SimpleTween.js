@@ -372,9 +372,9 @@ class SimpleTween {
 
   start(resetRepeat = true) {
     if (resetRepeat) {
-      this.triggerEvent("start", "Starting animation");
+      this.triggerEvent("message", "Starting animation");
     } else {
-      this.triggerEvent("start", "Restarting animation");
+      this.triggerEvent("message", "Restarting animation");
     }
 
     if (this.isPlaying) {
@@ -438,11 +438,9 @@ class SimpleTween {
     //console.log("processTime", this.processTime);
     //console.log("Date.now()", Date.now());
     this.setProcessRequest();
-
     if (resetRepeat) {
       this.triggerEvent("start");
     }
-
     this.triggerEvent("update");
 
     return this;

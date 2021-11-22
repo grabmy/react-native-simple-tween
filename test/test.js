@@ -9,6 +9,7 @@ window.cancelAnimationFrame = (id) => {
   clearInterval(id);
 };
 
+/*
 it("Test", function (done) {
   const tween = new SimpleTween({ test: 0 }, { test: 100 }, 500);
   const events = [];
@@ -61,8 +62,9 @@ it("Test", function (done) {
     tween.start();
   }, 1000);
 });
+*/
 
-/*
+
 it("Waits on start delay", function (done) {
   const tween = new SimpleTween({ test: 0 }, { test: 100 }, 200);
   const events = [];
@@ -121,7 +123,7 @@ it("Waits on start delay", function (done) {
 
     timeoutIds.push(
       setTimeout(() => {
-        console.log("start 3", tween.getValues(), events);
+        //console.log("start 3", tween.getValues(), events);
         expect(tween.getValues().test).to.eq(100);
         expect(events).to.eql(["start", "end"]);
         done();
@@ -131,6 +133,7 @@ it("Waits on start delay", function (done) {
     tween.start();
   }, 1000);
 });
+
 
 it("Waits on end delay", function (done) {
   const tween = new SimpleTween({ test: 0 }, { test: 100 }, 200);
@@ -201,6 +204,7 @@ it("Waits on end delay", function (done) {
     tween.start();
   }, 1000);
 });
+
 
 it("Waits on cycle delay", function (done) {
   const tween = new SimpleTween({ test: 0 }, { test: 100 }, 200);
@@ -280,6 +284,7 @@ it("Waits on cycle delay", function (done) {
     tween.start();
   }, 1000);
 });
+
 
 it("Waits on repeat delay", function (done) {
   const tween = new SimpleTween({ test: 0 }, { test: 100 }, 200);
@@ -648,6 +653,6 @@ it("Starts again the animation after stop", function (done) {
     tween.start();
   }, 1000);
 });
-*/
+
 
 // Test on multiple tween at the same time
