@@ -454,6 +454,7 @@ it("Triggers order with cycle and repeat ", function (done) {
         "cycle",
         "end",
       ]);
+      tween.stop();
       done();
     });
 

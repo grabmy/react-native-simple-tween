@@ -2,15 +2,18 @@
 
 Simple variables transition between 2 values with ease.
 
-This library will animate values (floats and hex colors) and call an update function to retrieve the modified values, based on requestAnimationFrame and setTimeout, setInterval as fallback.
+This library will animate values (floats and hex colors) and call an update function to retrieve the modified values, calls based on requestAnimationFrame and setTimeout, setInterval as fallback.
 
 Quick features:
 
-- Transition a set of values with easing
+- Transition a set of values with ease
 - Play, stop, pause and resume animation
 - 39 ease functions to choose from
 - Stop or remove animation of value with spoecific name
 - Smooth transition when switching direction
+- Event system
+- Delay at start, stop, cycle and repeat
+- Chaining functions
 
 ## Table of Contents
 
@@ -50,7 +53,10 @@ const tween = new SimpleTween(from, to, 1000);
 
 tween.onUpdate((values) => {
   // Use the values here
-  console.log("values", values);
+  const element = document.querySelector(".button");
+  element.style.left = values.x;
+  element.style.top = values.y;
+  element.style.color = values.color;
 });
 
 tween.start();
@@ -466,6 +472,7 @@ console.log(tween.isPaused);
 - Test with continuous loop for several hours
 - Implement a function to add a value
 - Make an example HTML page with graph.js
+- Test on multiple tween at the same time
 
 ### Pending analysis
 
