@@ -4,6 +4,14 @@ Simple variables transition between 2 values with ease.
 
 This library will animate values (floats and hex colors) and call an update function to retrieve the modified values, based on requestAnimationFrame and setTimeout, setInterval as fallback.
 
+Quick features:
+
+- Transition a set of values with easing
+- Play, stop, pause and resume animation
+- 39 ease functions to choose from
+- Stop or remove animation of value with spoecific name
+- Smooth transition when switching direction
+
 ## Table of Contents
 
 1. [Install](#install)
@@ -121,10 +129,17 @@ Start  Cycle    Repeat  Cycle    End
 Instanciation takes 3 parameters: the start values, the end values and the duration of the animation.
 
 ```js
+// Starting state
 const from = { a: 0, test: 1000 };
+
+// Ending state
 const to = { a: 1, test: 0 };
+
 // Instanciate the tween object
 const tween = new SimpleTween(from, to, 1000);
+
+// Start the animation
+twxeen.start();
 ```
 
 ### Events
@@ -441,6 +456,7 @@ console.log(tween.isPaused);
 
 ### Todo in the next versions
 
+- Smooth function documentation
 - Function to disable requestAnimationFrame
 - Add test to check disable requestAnimationFrame
 - When reverse direction, use the elapsed duration instead of the complete duration
