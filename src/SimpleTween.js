@@ -105,7 +105,7 @@ class SimpleTween {
     this.endValues = endValues;
     this.currentValues = this.getValues(this.startValues, this.endValues);
     this.previousValues = Object.assign({}, this.currentValues);
-    //console.log("constructor: previous", this.previousValues);
+
     this.duration = duration;
 
     this.forward();
@@ -211,8 +211,6 @@ class SimpleTween {
       }
     }
     this.velocity = velocity;
-    //console.log("deltaTime", this.deltaTime);
-    //console.log("velocity", this.velocity);
   }
 
   triggerEvent(name, data) {
@@ -372,9 +370,9 @@ class SimpleTween {
 
   start(resetRepeat = true) {
     if (resetRepeat) {
-      this.triggerEvent("message", "Starting animation");
+      this.triggerEvent("start", "Starting animation");
     } else {
-      this.triggerEvent("message", "Restarting animation");
+      this.triggerEvent("start", "Restarting animation");
     }
 
     if (this.isPlaying) {
@@ -435,12 +433,12 @@ class SimpleTween {
     // Set the next process time
     this.processTime = Date.now() + this.updateTime;
 
-    //console.log("processTime", this.processTime);
-    //console.log("Date.now()", Date.now());
     this.setProcessRequest();
+
     if (resetRepeat) {
       this.triggerEvent("start");
     }
+
     this.triggerEvent("update");
 
     return this;
@@ -469,6 +467,8 @@ class SimpleTween {
 
   setNextProcessRequest() {
     if (!this.requestAnimationFrame) {
+      this.animationFrameId = this.requestAnimationFrame(this.process);
+    } else {
       if (this.timeoutId) {
         clearTimeout(this.timeoutId);
       }
@@ -533,8 +533,6 @@ class SimpleTween {
     this.checkComplete();
 
     this.triggerEvent("update");
-
-    // console.log('linearProgress = ' + this.linearProgress + ', direction = ' + this.direction);
 
     this.processTime = Date.now() + this.updateTime;
     this.setNextProcessRequest();
@@ -618,8 +616,6 @@ class SimpleTween {
   }
 
   computeValues() {
-    //console.log("-----------------------");
-    //console.log("computeValues");
     this.computeVelocity(this.previousValues, this.currentValues);
 
     this.linearProgress = 0;
@@ -633,7 +629,7 @@ class SimpleTween {
     } else if (this.linearProgress > 1) {
       this.linearProgress = 1;
     }
-
+    console.log('this.linearProgress', this.linearProgress);
     let progress = this.linearProgress;
     if (this.easing) {
       progress = this.easing(progress);
@@ -663,7 +659,6 @@ class SimpleTween {
         if (typeof startValue == "number" && typeof endValue == "number") {
           // For float
           const newValue = startValue + (endValue - startValue) * progress;
-          //console.log("compute new velocity");
           const currentVelocity = this.deltaTime
             ? (newValue - this.currentValues[name]) / this.deltaTime
             : 0;
@@ -705,13 +700,6 @@ class SimpleTween {
   }
 
   applyVelocity(value, currentVelocity, previousVelocity) {
-    //console.log("-------------------- smoothValue");
-    //console.log("value", value);
-    //console.log("currentVelocity", currentVelocity);
-    //console.log("previousVelocity", previousVelocity);
-    //console.log("smooth", this.smooth);
-    //console.log("linearProgress", this.linearProgress);
-
     if (currentVelocity == 0 || this.smooth == 0 || this.linearProgress == 1) {
       return value;
     }
@@ -723,16 +711,7 @@ class SimpleTween {
         this.smooth *
         this.deltaTime) /
         3;
-    //console.log("- result = ", result);
     return result;
-    /*
-    let result =
-      value - (velocity) * (1 - this.linearProgress) * this.smooth;
-    console.log("smoothValue result", result);
-    console.log("-");
-
-    return result;
-    */
   }
 
   stop() {
@@ -742,7 +721,7 @@ class SimpleTween {
 
     this.triggerEvent("message", "Stopping animation");
 
-    this.computeValues();
+    //this.computeValues();
     this.isPlaying = false;
     this.hasReachEndTime = true;
     this.cancelProcessRequest();
@@ -807,11 +786,11 @@ class SimpleTween {
     if (this.isPlaying) {
       this.stop();
     }
+
     this.startValues = Object.assign({}, this.currentValues);
-    //console.log("to startValues", this.startValues);
     this.forward();
     this.endValues = values;
-    //console.log("to startValues", this.endValues);
+
     this.setDuration(duration || this.duration);
     this.start();
     return this;
