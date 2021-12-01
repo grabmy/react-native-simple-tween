@@ -629,7 +629,7 @@ class SimpleTween {
     } else if (this.linearProgress > 1) {
       this.linearProgress = 1;
     }
-    console.log('this.linearProgress', this.linearProgress);
+    //console.log('this.linearProgress', this.linearProgress);
     let progress = this.linearProgress;
     if (this.easing) {
       progress = this.easing(progress);
