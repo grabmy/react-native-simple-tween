@@ -10,10 +10,8 @@ Quick features:
 - Play, stop, pause and resume animation
 - 39 ease functions to choose from
 - Stop or remove animation of value with spoecific name
-- Smooth transition when switching direction
 - Event system
 - Delay at start, stop, cycle and repeat
-- Chaining functions
 
 ## Table of Contents
 
@@ -452,16 +450,17 @@ console.log(tween.isPaused);
 - Improve event system with cycle and repeat events
 - Rename delay to startDelay
 - Add cycleDelay, endDelay and repeatDelay
-- Add smooth option to damp velocity
 
 ### Version 0.3.1
 
 - Fix events triggered twice
+- Fix request animation frame sometime do not fire
 
 ## Futur development
 
 ### Todo in the next versions
 
+- Add smooth option to damp velocity
 - Smooth function documentation
 - Function to disable requestAnimationFrame
 - Add test to check disable requestAnimationFrame
